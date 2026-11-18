@@ -1,16 +1,21 @@
 import {
-  Divider,
+  Box,
+  getThemeColor,
   Pill,
-  Stack,
   Tooltip,
-  useMantineColorScheme,
+  useMantineTheme,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import React from "react";
 import { useDeliveryChartContext } from "~/app/components/sprint/chart/DeliveryChartContext";
 import ManageSprintDeadlineModal from "~/app/components/sprint/ManageSprintDeadlineModal";
-import { CalculateChartLinePositionUtil } from "~/shared/logic/sprint/chart/CalculateChartLinePositionUtil";
+import { percentForElapsedDays } from "~/shared/logic/sprint/chart/timelineScale";
 
+/**
+ * A vertical line at `day` days elapsed (0 = start of day 1, 6.5 = halfway
+ * through day 7). Must be rendered inside DeliveryChartLines, which shares
+ * the bars' x-axis; the position is a percentage from the shared scale.
+ */
 export const DeliveryChartDeadline = ({
   name,
   description,
@@ -24,84 +29,48 @@ export const DeliveryChartDeadline = ({
   day: number;
   isDeadline?: boolean;
 }) => {
-  const {
-    sprint,
-    chartWidth,
-    sprintDeadlines,
-    isDisabled,
-    actualSprintLength,
-    sectionWidths,
-  } = useDeliveryChartContext();
+  const { scale, sprintDeadlines, isDisabled } = useDeliveryChartContext();
   const [opened, { open, close }] = useDisclosure(false);
-  const { colorScheme } = useMantineColorScheme();
-  const isDark = colorScheme === "dark";
+  const theme = useMantineTheme();
 
-  // Check if the day is visible in the current zoom window
-  if (sprint.zoom) {
-    const { previousDay, currentDay, nextDay } = sprint.zoom;
-    const visibleDays = [previousDay.number, currentDay.number];
-    if (nextDay) {
-      visibleDays.push(nextDay.number);
-    }
-    if (!visibleDays.includes(day)) {
-      return null;
-    }
-  }
-
-  const linePosition = CalculateChartLinePositionUtil(
-    chartWidth,
-    sprint.zoom
-      ? sprint.zoom.isFirstDay || sprint.zoom.isLastDay
-        ? 2
-        : 3
-      : actualSprintLength,
-    sprint.zoom
-      ? day -
-          sprint.zoom.previousDay.number +
-          (sprint.zoom.isFirstDay || sprint.zoom.isLastDay ? 0 : 1)
-      : day,
-    sectionWidths
-  );
-
-  const height = `calc(100% - 42px)`;
-
-  if (linePosition <= 0) {
+  const percent = percentForElapsedDays(scale, day);
+  if (percent === null) {
     return null;
   }
 
+  const left = `${percent}%`;
+  const clickable = isDeadline && !isDisabled;
+
   return (
     <React.Fragment>
-      <Stack
-        align="center"
-        onClick={isDeadline && !isDisabled ? open : undefined}
-      >
-        <Tooltip
-          label={`${name}${description ? ` - ${description}` : ""}`}
-          left={`${linePosition + 32}px`}
+      <Tooltip label={`${name}${description ? ` - ${description}` : ""}`}>
+        <Box
+          pos="absolute"
+          top={-22}
+          left={left}
+          style={{
+            transform: "translateX(-50%)",
+            pointerEvents: "auto",
+            cursor: clickable ? "pointer" : undefined,
+            whiteSpace: "nowrap",
+          }}
+          onClick={clickable ? open : undefined}
         >
-          <div>
-            <Pill
-              size="xs"
-              pos={"absolute"}
-              left={`${linePosition - 32}px`}
-              top={12}
-              style={{
-                zIndex: 10,
-              }}
-              bottom={0}
-            >
-              {name}
-            </Pill>
-            <Divider
-              pos={"absolute"}
-              style={{ height, zIndex: 10 }}
-              left={`${linePosition}px`}
-              bg={isDark ? "black" : "white"}
-              bd={`1px dashed ${colour}`}
-            />
-          </div>
-        </Tooltip>
-      </Stack>
+          <Pill size="xs">{name}</Pill>
+        </Box>
+      </Tooltip>
+      <Box
+        pos="absolute"
+        top={0}
+        bottom={0}
+        left={left}
+        w={0}
+        ml={-1}
+        style={{ borderLeft: `2px dashed ${getThemeColor(colour, theme)}` }}
+        data-chart-line={name}
+        data-day={day}
+        aria-hidden
+      />
       {isDeadline && (
         <ManageSprintDeadlineModal
           opened={opened}

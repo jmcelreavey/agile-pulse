@@ -43,6 +43,19 @@ The Sprint Chart consists of several key components:
 - Custom Deadlines (with configurable colors)
 - All markers adjust position based on zoom level
 
+#### How markers line up
+
+Every day column, task block and marker is placed on one shared scale (`src/shared/logic/sprint/chart/timelineScale.ts`). Column `n` covers the time from `n - 1` to `n` days elapsed, so its left edge is the start of day `n`. A marker at "6.5 days elapsed" sits halfway through day 7, whether the sprint is 10 days or 13.5.
+
+- Positions are percentages of the bar, not pixels, so they hold at any screen width or browser zoom.
+- The day header, every lane and the marker layer share the same left and right inset, so a marker at 50% is at 50% of every bar.
+- A 13.5-day sprint is drawn as 14 columns. Day 14 is split: the first half is in the sprint and the second half is striped red as overrun, and its label shows ½.
+- If the sprint runs past its planned length, the timeline grows to include today, so the red line never falls off the end.
+- Zoomed views use the same scale, limited to the 2 or 3 visible days. A marker outside them is hidden.
+- The red line's tooltip says how many days are left (or how many over), including half days.
+
+**Why:** the line used to be placed in pixels from measured header widths plus a fixed 47px offset, while tasks were laid out with percentages. The two drifted at different widths, a half day was rounded down to the day before, and zoomed first/last days were a column out.
+
 ## Views and Navigation
 
 ### Standard View
@@ -57,7 +70,7 @@ The Sprint Chart consists of several key components:
 - Shows 2-3 days at a time depending on position:
   - First day: Shows days 1-2
   - Middle days: Shows previous, current, and next day
-  - Last day: Shows second-last and last day
+  - Last day: Shows second-last and last day (for a 13.5-day sprint, days 13-14)
 - Adjusts task visibility to show only relevant portions
 - Maintains deadline and marker visibility within view
 

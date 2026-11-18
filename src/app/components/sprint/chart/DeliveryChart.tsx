@@ -1,5 +1,7 @@
 import { DragDropContext, type DropResult } from "@hello-pangea/dnd";
-import { Box, Card, Loader } from "@mantine/core";
+import { Box, Button, Card, Loader } from "@mantine/core";
+import { IconZoomCancel } from "@tabler/icons-react";
+import { useRouter } from "next/navigation";
 import { useMemo } from "react";
 import { EmptyState } from "~/app/components/shared/EmptyState";
 import { type GetOneProjectUseCaseType } from "~/server/logic/project/GetOneProjectUseCase";
@@ -11,6 +13,7 @@ import {
   DeliveryChartProvider,
   useDeliveryChartContext,
 } from "~/app/components/sprint/chart/DeliveryChartContext";
+import { DeliveryChartLines } from "~/app/components/sprint/chart/DeliveryChartLines";
 import { DeliveryChartLegend } from "~/app/components/sprint/chart/DeliveryChartLegend";
 import { DeliveryChartMemberCard } from "~/app/components/sprint/chart/DeliveryChartMemberCard";
 import { DeliveryChartTimeline } from "~/app/components/sprint/chart/DeliveryChartTimeline";
@@ -63,6 +66,7 @@ const DeliveryChartContent = () => {
     updateMembersOrder,
     unassignedTasks,
   } = useDeliveryChartContext();
+  const router = useRouter();
 
   const noRecords = localMembers.length === 0 && unassignedTasks.length === 0;
 
@@ -148,7 +152,25 @@ const DeliveryChartContent = () => {
         </Box>
       )}
       <Card withBorder shadow="md" p={32}>
-        <Box>
+        {sprint.isZoomed && (
+          <Box mt={-16} mb={24}>
+            <Button
+              leftSection={<IconZoomCancel size={16} />}
+              variant="light"
+              size="xs"
+              onClick={() =>
+                router.push(
+                  `/projects/${sprint.projectId}/sprints/${sprint.id}`,
+                  { scroll: false },
+                )
+              }
+            >
+              Reset Zoom
+            </Button>
+          </Box>
+        )}
+        <Box pos="relative">
+          <DeliveryChartLines />
           <DeliveryChartTimeline />
           <DeliveryChartLegend />
           {sortedMembers.map((member, index) => (

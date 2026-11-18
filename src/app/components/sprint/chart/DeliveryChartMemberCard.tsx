@@ -9,6 +9,7 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { type FC } from "react";
+import { LANE_PADDING } from "~/app/components/sprint/chart/chartLayout";
 import { useDeliveryChartContext } from "~/app/components/sprint/chart/DeliveryChartContext";
 import { DeliveryChartTaskProgress } from "~/app/components/sprint/chart/DeliveryChartTaskProgress";
 import UpdateSprintMemberModal from "~/app/components/sprint/member/UpdateSprintMemberModal";
@@ -27,7 +28,7 @@ export const DeliveryChartMemberCard: FC<{
   const sortedTasks = [...sprintTasks].sort((a, b) => a.order - b.order);
 
   return (
-    <Card mb={8} withBorder shadow="md">
+    <Card mb={8} withBorder shadow="md" p={LANE_PADDING}>
       <Box>
         <Box>
           <Text mb={4} size="md" fw={500}>

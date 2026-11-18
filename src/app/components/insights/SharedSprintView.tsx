@@ -5,6 +5,7 @@ import { IconCalendarPlus } from "@tabler/icons-react";
 import Link from "next/link";
 import { StatusBadge } from "~/app/components/insights/shared";
 import { type ShareLinkUseCase } from "~/server/logic/insights/ShareUseCases";
+import { columnCountForDays, createTimelineScale, percentForElapsedDays } from "~/shared/logic/sprint/chart/timelineScale";
 import { getStateColour } from "~/shared/types/State";
 
 type Shared = NonNullable<Awaited<ReturnType<ShareLinkUseCase["getShared"]>>>;
@@ -23,8 +24,13 @@ const Stat = ({ label, value }: { label: string; value: string }) => (
 /** A read-only sprint chart for people without an account. */
 export const SharedSprintView = ({ data }: { data: Shared }) => {
   const { sprint, forecast, lanes, deadlines, eta } = data;
-  const span = Math.max(sprint.days, ...lanes.map((lane) => lane.tasks.reduce((sum, task) => sum + task.days, 0)), 1);
+  // Same whole-day scale as the main chart, long enough to show today.
+  const span = columnCountForDays(
+    Math.max(sprint.days, forecast.currentDay, ...lanes.map((lane) => lane.tasks.reduce((sum, task) => sum + task.days, 0)))
+  );
+  const scale = createTimelineScale(Array.from({ length: span }, (_, i) => i + 1));
   const pct = (days: number) => `${(days / span) * 100}%`;
+  const todayPercent = percentForElapsedDays(scale, forecast.currentDay);
   return (
     <Container size="lg" py="xl">
       <Stack gap="lg">
@@ -77,7 +83,9 @@ export const SharedSprintView = ({ data }: { data: Shared }) => {
                       </Box>
                     </Tooltip>
                   ))}
-                  <Box pos="absolute" top={0} bottom={0} left={pct(forecast.currentDay)} w={2} bg="red.6" aria-hidden />
+                  {todayPercent !== null && (
+                    <Box pos="absolute" top={0} bottom={0} left={`${todayPercent}%`} w={2} ml={-1} bg="red.6" aria-hidden data-chart-line="Current Day" />
+                  )}
                 </Box>
               </div>
             ))}

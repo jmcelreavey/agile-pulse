@@ -1,5 +1,9 @@
 import dayjs from "dayjs";
 import { UseCase, type getReturnType } from "~/server/logic/useCase";
+import {
+  columnCountForDays,
+  elapsedSprintDays,
+} from "~/shared/logic/sprint/chart/timelineScale";
 import { type State } from "~/shared/types/State";
 
 type ZoomWindow = {
@@ -11,11 +15,11 @@ type ZoomWindow = {
 export class GetSprintMembersUseCase extends UseCase {
   private calculateZoomWindow(
     zoomDay: number | undefined,
-    maxDays: number
+    maxDays: number,
   ): ZoomWindow | null {
     if (!zoomDay) return null;
 
-    const maxWholeDays = Math.ceil(maxDays);
+    const maxWholeDays = columnCountForDays(maxDays);
     const isFirstDay = zoomDay === 1;
     const isLastDay = zoomDay === maxWholeDays;
 
@@ -30,7 +34,7 @@ export class GetSprintMembersUseCase extends UseCase {
 
   private getWorkingDateForDay(
     startDate: Date | null,
-    targetDay: number
+    targetDay: number,
   ): Date {
     if (!startDate) {
       return new Date(); // Return current date as fallback
@@ -58,15 +62,15 @@ export class GetSprintMembersUseCase extends UseCase {
   private generateTimelineDays(
     sprint: { startedAt: Date | null; days: number } | null,
     zoomWindow: ZoomWindow | null,
-    maxDays: number
+    maxDays: number,
   ) {
     // Only generate days within the zoom window if it exists
     const daysToGenerate = zoomWindow
       ? Array.from(
           { length: zoomWindow.visibleDays },
-          (_, i) => zoomWindow.startDay + i
+          (_, i) => zoomWindow.startDay + i,
         )
-      : Array.from({ length: Math.ceil(maxDays) }, (_, i) => i + 1);
+      : Array.from({ length: columnCountForDays(maxDays) }, (_, i) => i + 1);
 
     return daysToGenerate.map((dayNumber) => {
       const date = sprint?.startedAt
@@ -141,14 +145,17 @@ export class GetSprintMembersUseCase extends UseCase {
 
     const sprint = await this.db.sprint.findUnique({
       where: { id: sprintId },
-      select: { startedAt: true, days: true },
+      select: { startedAt: true, days: true, daysRemaining: true },
     });
 
+    // The chart is as long as the longest lane, the planned sprint, or the
+    // time already spent (so an overrunning sprint still shows today).
     const maxDays = Math.max(
       ...members.map((m) =>
-        m.sprintTasks.reduce((sum, task) => sum + task.days, 0)
+        m.sprintTasks.reduce((sum, task) => sum + task.days, 0),
       ),
-      sprint?.days ?? 0
+      sprint?.days ?? 0,
+      sprint ? elapsedSprintDays(sprint) : 0,
     );
 
     const zoomWindow = this.calculateZoomWindow(zoomDay, maxDays);
@@ -166,7 +173,7 @@ export class GetSprintMembersUseCase extends UseCase {
     const flattenedTeam = members.map((t) => {
       const totalTaskDays = t.sprintTasks.reduce(
         (sum, task) => sum + task.days,
-        0
+        0,
       );
 
       const tasks = t.sprintTasks
@@ -181,7 +188,7 @@ export class GetSprintMembersUseCase extends UseCase {
           let visibleDays = task.days;
           // Calculate percentage relative to the number of timeline sections (not maxDays)
           // This ensures tasks align properly with the equal-width timeline sections
-          const timelineSections = Math.ceil(maxDays);
+          const timelineSections = columnCountForDays(maxDays);
           let visiblePercentage = (task.days / timelineSections) * 100;
 
           if (zoomWindow) {
@@ -196,7 +203,7 @@ export class GetSprintMembersUseCase extends UseCase {
             // Calculate how much of the task falls into each day of the window
             const taskStartInWindow = Math.max(
               taskDayExact,
-              zoomWindow.startDay
+              zoomWindow.startDay,
             );
             const taskEndInWindow = Math.min(taskEndDay, zoomWindow.endDay + 1);
 

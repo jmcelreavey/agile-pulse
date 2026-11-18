@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext } from "react";
 import { useDeliveryChartReorder } from "~/app/hooks/useDeliveryChartReorder";
 import { UpdateSprintMemberOrderUseCase } from "~/app/logic/sprint/UpdateSprintMemberOrderUseCase";
 import { UpdateSprintTaskOrderUseCase } from "~/app/logic/sprint/UpdateSprintTaskOrderUseCase";
@@ -11,6 +11,12 @@ import { type GetOneSprintUseCaseType } from "~/server/logic/sprint/GetOneSprint
 import { type GetSprintDeadlinesUseCaseType } from "~/server/logic/sprint/GetSprintDeadlinesUseCase";
 import { type GetSprintMembersUseCaseType } from "~/server/logic/sprint/GetSprintMembersUseCase";
 import { type GetSprintTasksUseCaseType } from "~/server/logic/sprint/GetSprintTasksUseCase";
+import {
+  columnCountForDays,
+  createTimelineScale,
+  elapsedSprintDays,
+  type TimelineScale,
+} from "~/shared/logic/sprint/chart/timelineScale";
 
 export type DeliveryChartContextProps = {
   members: GetSprintMembersUseCaseType;
@@ -23,19 +29,16 @@ export type DeliveryChartContextProps = {
   unassignedTasks: GetSprintTasksUseCaseType;
   isLoading?: boolean;
   updateTasksOrder: (
-    sprintTask: UpdateSprintTaskOrderInputType
+    sprintTask: UpdateSprintTaskOrderInputType,
   ) => Promise<void>;
   updateMembersOrder: (
-    sprintTask: UpdateSprintMemberOrderInputType
+    sprintTask: UpdateSprintMemberOrderInputType,
   ) => Promise<void>;
-  chartWidth: number;
-  setChartWidth: (width: number) => void;
-  sectionWidths: number[];
-  setSectionWidths: (widths: number[]) => void;
   isDisabled?: boolean;
   isZoomed: boolean;
-  maxSprintMemberTaskDays: number;
-  actualSprintLength: number;
+  /** The day columns drawn in the header; lanes and lines use the same ones. */
+  timelineDays: SprintDay[];
+  scale: TimelineScale;
 };
 
 export const DeliveryChartContext =
@@ -71,8 +74,6 @@ export const DeliveryChartProvider: React.FC<{
   isDisabled,
   zoomDay,
 }) => {
-  const [chartWidth, setChartWidth] = useState<number>(0);
-  const [sectionWidths, setSectionWidths] = useState<number[]>([]);
   const updateSprintTaskOrder = new UpdateSprintTaskOrderUseCase();
   const updateSprintMemberOrder = new UpdateSprintMemberOrderUseCase();
 
@@ -98,7 +99,7 @@ export const DeliveryChartProvider: React.FC<{
   const isZoomed = Boolean(zoomDay);
 
   const updateTasksOrder = async (
-    sprintTask: UpdateSprintTaskOrderInputType
+    sprintTask: UpdateSprintTaskOrderInputType,
   ): Promise<void> => {
     // Update local state first
     reorderTasks(sprintTask);
@@ -108,7 +109,7 @@ export const DeliveryChartProvider: React.FC<{
   };
 
   const updateMembersOrder = async (
-    sprintMember: UpdateSprintMemberOrderInputType
+    sprintMember: UpdateSprintMemberOrderInputType,
   ): Promise<void> => {
     // Update local state first
     reorderMembers(sprintMember);
@@ -117,13 +118,8 @@ export const DeliveryChartProvider: React.FC<{
     await updateSprintMemberOrder.execute({ sprintMember });
   };
 
-  const maxSprintMemberTaskDays = Math.max(
-    ...localMembers.map((m) =>
-      m.tasks.map((t) => t.days).reduce((a, b) => a + b, 0)
-    )
-  );
-
-  const actualSprintLength = Math.max(maxSprintMemberTaskDays, sprint.days);
+  const timelineDays = getTimelineDays(initialMembers, sprint);
+  const scale = createTimelineScale(timelineDays.map((d) => d.day));
 
   return (
     <DeliveryChartContext.Provider
@@ -138,15 +134,11 @@ export const DeliveryChartProvider: React.FC<{
         unassignedTasks: calculatedUnassignedTasks,
         updateTasksOrder,
         updateMembersOrder,
-        chartWidth,
         sprintDeadlines,
-        setChartWidth,
-        sectionWidths,
-        setSectionWidths,
         isDisabled,
         isZoomed,
-        maxSprintMemberTaskDays,
-        actualSprintLength,
+        timelineDays,
+        scale,
       }}
     >
       {children}
@@ -154,11 +146,43 @@ export const DeliveryChartProvider: React.FC<{
   );
 };
 
+/**
+ * The day columns come from the server (they already respect zoom). Old
+ * snapshots were saved before the server sent them, so fall back to one
+ * column per day of the longest lane / sprint.
+ */
+const getTimelineDays = (
+  members: GetSprintMembersUseCaseType,
+  sprint: GetOneSprintUseCaseType,
+): SprintDay[] => {
+  const fromServer = members[0]?.timelineDays;
+  if (fromServer && fromServer.length > 0) {
+    return fromServer.map((day) => ({
+      day: day.number,
+      percentage: day.percentage,
+      dayOfWeek: day.dayOfWeek,
+      date: day.date,
+    }));
+  }
+  const longestLane = Math.max(
+    0,
+    ...members.map((m) => m.tasks.reduce((sum, t) => sum + t.days, 0)),
+  );
+  const count = columnCountForDays(
+    Math.max(longestLane, sprint.days, elapsedSprintDays(sprint)),
+  );
+  return Array.from({ length: count }, (_, i) => ({
+    day: i + 1,
+    percentage: 100 / count,
+    date: new Date(),
+  }));
+};
+
 export const useDeliveryChartContext = () => {
   const context = useContext(DeliveryChartContext);
   if (!context) {
     throw new Error(
-      "useDeliveryChartContext must be used within a DeliveryChartProvider"
+      "useDeliveryChartContext must be used within a DeliveryChartProvider",
     );
   }
   return context;
