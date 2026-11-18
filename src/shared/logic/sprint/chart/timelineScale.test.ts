@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   columnCountForDays,
   createTimelineScale,
+  currentDayLineDays,
+  currentDayNumber,
   elapsedSprintDays,
   percentForDayStart,
   percentForElapsedDays,
@@ -166,4 +168,48 @@ describe("elapsedSprintDays", () => {
   ])("%s days with %s left -> %s elapsed", (days, daysRemaining, expected) => {
     expect(elapsedSprintDays({ days, daysRemaining })).toBe(expected);
   });
+});
+
+describe("current day line", () => {
+  it.each([
+    // [elapsed, current day, line at (days elapsed)]
+    [0, 1, 0],
+    [0.5, 1, 0],
+    [6, 7, 6],
+    [6.5, 7, 6],
+    [6.999, 7, 6],
+    [13, 14, 13],
+    [13.5, 14, 13],
+    [12.5, 13, 12],
+    [-1, 1, 0],
+  ])("%s days elapsed is day %s, line at %s", (elapsed, day, line) => {
+    expect(currentDayNumber(elapsed)).toBe(day);
+    expect(currentDayLineDays(elapsed)).toBe(line);
+  });
+
+  it("isn't pushed back a day by float noise", () => {
+    expect(currentDayNumber(0.1 + 0.2 + 5.7)).toBe(7);
+  });
+
+  it.each([
+    // [sprint days, days remaining, expected day column the line starts]
+    [13.5, 7, 7],
+    [13.5, 6.5, 8],
+    [13.5, 0, 14],
+    [10, 10, 1],
+    [10, 4, 7],
+    [10, 0, 11],
+    [10, -2.5, 13],
+    [1, 0.5, 1],
+    [20, 13, 8],
+  ])(
+    "%s-day sprint with %s left: line on day %s's left edge",
+    (days, daysRemaining, column) => {
+      const elapsed = elapsedSprintDays({ days, daysRemaining });
+      const scale = fullScale(Math.max(days, elapsed));
+      expect(
+        percentForElapsedDays(scale, currentDayLineDays(elapsed)),
+      ).toBeCloseTo(percentForDayStart(scale, column) ?? NaN, 9);
+    },
+  );
 });

@@ -1,5 +1,6 @@
 "use client";
 
+import { IconZoomIn } from "@tabler/icons-react";
 import {
   Button,
   ColorInput,
@@ -30,10 +31,13 @@ export default function ManageSprintDeadlineModal({
   day,
   opened,
   onClose,
+  onZoom,
   ...props
 }: ModalProps & {
   deadline?: GetSprintDeadlinesUseCaseType[0];
   day: number;
+  /** Shown as "Zoom into day N" where the header is too narrow for its zoom button. */
+  onZoom?: () => void;
 }) {
   const { sprint } = useDeliveryChartContext();
   const unassignSprintDeadline = new UnassignSprintDeadlineUseCase();
@@ -146,6 +150,16 @@ export default function ManageSprintDeadlineModal({
         <ErrorAlert mutation={manageSprintDeadline.mutation} />
 
         <Group mt={16} justify="right" gap="xs">
+          {onZoom && (
+            <Button
+              variant="subtle"
+              mr="auto"
+              leftSection={<IconZoomIn size={16} />}
+              onClick={onZoom}
+            >
+              Zoom into day {day}
+            </Button>
+          )}
           <Button
             variant="default"
             onClick={handleClose}

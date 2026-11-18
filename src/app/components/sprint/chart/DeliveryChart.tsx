@@ -151,9 +151,9 @@ const DeliveryChartContent = () => {
           <DeliveryChartUnassignedCard sprintTasks={unassignedTasks} />
         </Box>
       )}
-      <Card withBorder shadow="md" p={32}>
+      <Card withBorder shadow="md" p={32} pt={16}>
         {sprint.isZoomed && (
-          <Box mt={-16} mb={24}>
+          <Box mb={8}>
             <Button
               leftSection={<IconZoomCancel size={16} />}
               variant="light"

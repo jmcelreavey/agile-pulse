@@ -9,12 +9,18 @@ import {
 } from "~/app/components/sprint/chart/DeliveryChartContext";
 import ManageSprintDeadlineModal from "~/app/components/sprint/ManageSprintDeadlineModal";
 import classes from "~/app/styles/DeliveryChart.module.css";
+import {
+  type DayLabelMode,
+  dayLabelText,
+} from "~/shared/logic/sprint/chart/dayLabels";
 import { plannedFractionOfDay } from "~/shared/logic/sprint/chart/timelineScale";
 
 export const DeliveryChartTimelineHeader = ({
   record,
+  mode,
 }: {
   record: SprintDay;
+  mode: DayLabelMode;
 }) => {
   const { sprint, sprintDeadlines, isDisabled, isZoomed } =
     useDeliveryChartContext();
@@ -26,6 +32,13 @@ export const DeliveryChartTimelineHeader = ({
   const planned = plannedFractionOfDay(sprint.days, record.day);
   const isPartDay = planned > 0 && planned < 1;
   const plannedPercent = `${planned * 100}%`;
+
+  const label = dayLabelText(mode, {
+    day: record.day,
+    dayOfWeek: record.dayOfWeek,
+    plannedFraction: planned,
+  });
+  const canZoom = !isDisabled && !isZoomed;
 
   const handleZoom = () => {
     router.push(
@@ -47,8 +60,8 @@ export const DeliveryChartTimelineHeader = ({
         data-day={record.day}
         title={
           isPartDay
-            ? `Day ${record.day}: ${planned * 100}% inside the sprint`
-            : `Day ${record.day}`
+            ? `Day ${record.day}${record.dayOfWeek ? ` (${record.dayOfWeek})` : ""}: ${planned * 100}% inside the sprint`
+            : `Day ${record.day}${record.dayOfWeek ? ` (${record.dayOfWeek})` : ""}`
         }
         style={
           isPartDay
@@ -58,12 +71,17 @@ export const DeliveryChartTimelineHeader = ({
             : undefined
         }
       >
-        <Flex direction="column" gap={2}>
-          <Progress.Label>
-            {record.dayOfWeek || record.day}
-            {isPartDay && planned === 0.5 ? " ½" : ""}
-          </Progress.Label>
-          {!isDisabled && !isZoomed && (
+        <Flex direction="column" gap={2} align="center" miw={0}>
+          {label !== null && (
+            <Progress.Label
+              fz={mode === "full" ? undefined : 11}
+              style={{ overflow: "visible", textOverflow: "clip" }}
+              data-day-label=""
+            >
+              {label}
+            </Progress.Label>
+          )}
+          {canZoom && mode === "full" && (
             <Button
               variant="subtle"
               size="compact-xs"
@@ -85,6 +103,7 @@ export const DeliveryChartTimelineHeader = ({
         onClose={close}
         deadline={sprintDeadlines.find((d) => d.day === record.day)}
         day={record.day}
+        onZoom={canZoom && mode !== "full" ? handleZoom : undefined}
       />
     </React.Fragment>
   );

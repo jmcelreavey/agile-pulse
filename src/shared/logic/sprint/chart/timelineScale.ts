@@ -75,3 +75,18 @@ export const elapsedSprintDays = (sprint: {
  */
 export const plannedFractionOfDay = (sprintDays: number, dayNumber: number) =>
   Math.min(1, Math.max(0, sprintDays - (dayNumber - 1)));
+
+/**
+ * The day the sprint is in: 6 days elapsed or 6.5 days elapsed are both
+ * "day 7" (the second one is half done). 13.5 elapsed is day 14.
+ */
+export const currentDayNumber = (elapsedDays: number) =>
+  Math.floor(Math.max(0, elapsedDays) + 1e-9) + 1;
+
+/**
+ * Where the current-day line goes, in days elapsed: the start of the
+ * current day, so it sits on that day column's left edge even when the
+ * day is part done.
+ */
+export const currentDayLineDays = (elapsedDays: number) =>
+  currentDayNumber(elapsedDays) - 1;
