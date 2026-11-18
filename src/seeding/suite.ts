@@ -4,6 +4,7 @@ import {
   deleteProject,
   inProgressProject,
 } from "~/seeding/scenarios/project.scenarios";
+import { checkoutScenario } from "~/seeding/scenarios/checkout.scenario";
 import { tenYearsGrowthScenario } from "~/seeding/scenarios/tenYearGrowth.scenario";
 import { createUsers } from "~/seeding/scenarios/user.scenarios";
 
@@ -12,6 +13,7 @@ const baseScenarios = [
   completeProject,
   inProgressProject,
   deleteProject,
+  checkoutScenario,
 ];
 
 const performanceScenarios = [tenYearsGrowthScenario];
