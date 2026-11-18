@@ -43,6 +43,13 @@ export const DeliveryChartTaskProgress = ({
       {...props.provided?.dragHandleProps}
       {...props.provided?.draggableProps}
       onContextMenu={handleContextMenu}
+      aria-label={`${task.name}, ${task.days} ${task.days === 1 ? "day" : "days"}, ${task.state}`}
+      onKeyDown={(event: React.KeyboardEvent) => {
+        if (event.key === "Enter" && !isComplete && !props.provided?.draggableProps.style?.transform) {
+          event.preventDefault();
+          openModal();
+        }
+      }}
     >
       <HoverCard
         openDelay={150}

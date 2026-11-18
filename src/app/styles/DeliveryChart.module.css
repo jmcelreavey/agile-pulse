@@ -6,3 +6,9 @@
 .resizeHandle {
   cursor: ew-resize;
 }
+
+.chartTask:focus-visible {
+  outline: 3px solid var(--mantine-color-yellow-5);
+  outline-offset: -3px;
+  z-index: 1;
+}

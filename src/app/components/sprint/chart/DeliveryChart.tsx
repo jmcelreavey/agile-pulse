@@ -138,7 +138,10 @@ const DeliveryChartContent = () => {
   }
 
   return (
-    <DragDropContext onDragEnd={handleDragEnd}>
+    <DragDropContext
+      onDragEnd={handleDragEnd}
+      dragHandleUsageInstructions="Press space to pick up the task. Use the left and right arrow keys to move it along the lane, up and down to move it to another person, space to drop it, or escape to cancel. Press enter to edit the task."
+    >
       {unassignedTasks.length > 0 && (
         <Box mb={16}>
           <DeliveryChartUnassignedCard sprintTasks={unassignedTasks} />
