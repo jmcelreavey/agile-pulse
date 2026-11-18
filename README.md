@@ -30,6 +30,8 @@ Agile Pulse was built before AI tools were everywhere. The newer features keep t
 - **Sharing.** Public read-only sprint links and an iCal feed of deadlines, sprint dates and the forecast. [More](docs/Sharing.md)
 - **Keyboard and dark mode.** Move tasks with the keyboard, and a theme that follows your system. [More](docs/Accessibility.md)
 
+![The sprint forecast: landing day, pace per person and at-risk tasks with reasons](docs/screenshots/forecast.png)
+
 | Projects | Project overview |
 | --- | --- |
 | ![Projects list](docs/screenshots/projects.png) | ![A project and its sprints](docs/screenshots/project.png) |
