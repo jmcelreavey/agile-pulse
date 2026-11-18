@@ -46,3 +46,7 @@ export const CustomerDashboardView = dynamic(() => import("~/app/views/CustomerD
   ssr: false,
   loading,
 });
+export const SettingsView = dynamic(
+  () => import("~/app/views/SettingsView").then((m) => m.SettingsView),
+  { ssr: false, loading }
+);

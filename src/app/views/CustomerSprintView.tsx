@@ -7,6 +7,7 @@ import { CustomerSprintChangelogs } from "~/app/components/customer/CustomerSpri
 import { CustomerSprintProgress } from "~/app/components/customer/CustomerSprintProgress";
 import { CustomerSprintTaskList } from "~/app/components/customer/CustomerSprintTaskList";
 import { DiscussionSection } from "~/app/components/customer/DiscussionSection";
+import { CustomerOutlookCard } from "~/app/components/insights/CustomerOutlookCard";
 import { EntityHeader } from "~/app/components/shared/EntityHeader";
 import { useCustomerSprintDetailQueries } from "~/app/hooks/useCustomerSprintQueries";
 import { State } from "~/shared/types/State";
@@ -89,6 +90,8 @@ export function CustomerSprintView({
 
       {/* Sprint Progress Overview */}
       <CustomerSprintProgress sprint={sprint} />
+
+      {sprint.state !== State.COMPLETED && <CustomerOutlookCard projectId={projectId} sprintId={sprintId} />}
 
       {/* Sprint Tasks */}
       <CustomerSprintTaskList

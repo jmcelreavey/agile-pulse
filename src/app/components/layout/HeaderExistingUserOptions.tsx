@@ -11,7 +11,8 @@ import {
   useMantineColorScheme,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconLink, IconLogout, IconMoon, IconSun } from "@tabler/icons-react";
+import { IconBook, IconKey, IconLink, IconLogout, IconMoon, IconSun } from "@tabler/icons-react";
+import Link from "next/link";
 import { type Session } from "next-auth";
 import { signOut } from "next-auth/react";
 import { useParams } from "next/navigation";
@@ -71,6 +72,12 @@ export const HeaderExistingUserOptions = ({
               }}
             >
               Configure Jira
+            </MenuItem>
+            <MenuItem component={Link} href="/settings" leftSection={<IconKey size={16} />}>
+              API tokens &amp; MCP
+            </MenuItem>
+            <MenuItem component={Link} href="/docs" leftSection={<IconBook size={16} />}>
+              Docs
             </MenuItem>
             <MenuItem
               leftSection={

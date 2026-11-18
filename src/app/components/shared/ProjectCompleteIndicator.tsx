@@ -1,6 +1,6 @@
 "use client";
 
-import { Group, Popover, Text, useMantineColorScheme } from "@mantine/core";
+import { Group, Popover, Text, useComputedColorScheme } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconRosetteDiscountCheck } from "@tabler/icons-react";
 
@@ -12,8 +12,7 @@ export const ProjectCompleteIndicator = ({
   completedAt?: Date | null;
 }) => {
   const [opened, { close, open }] = useDisclosure(false);
-  const { colorScheme } = useMantineColorScheme();
-  const isDark = colorScheme === "dark";
+  const isDark = useComputedColorScheme("light") === "dark";
 
   return (
     <Popover

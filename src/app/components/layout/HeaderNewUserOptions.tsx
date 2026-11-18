@@ -7,7 +7,8 @@ import {
   useComputedColorScheme,
   useMantineColorScheme,
 } from "@mantine/core";
-import { IconMoon, IconSun } from "@tabler/icons-react";
+import { IconBook, IconMoon, IconSun } from "@tabler/icons-react";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 // Use a custom hook to communicate between components without prop drilling
@@ -35,9 +36,13 @@ export const HeaderNewUserOptions = () => {
 
   return (
     <Group gap="xs">
+      <ActionIcon component={Link} href="/docs" variant="subtle" size={36} aria-label="Documentation" title="Documentation">
+        <IconBook size="1rem" />
+      </ActionIcon>
       <ActionIcon
         variant="subtle"
         size={36}
+        aria-label={computedColorScheme === "light" ? "Switch to dark mode" : "Switch to light mode"}
         onClick={() =>
           setColorScheme(computedColorScheme === "light" ? "dark" : "light")
         }
