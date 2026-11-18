@@ -7,6 +7,7 @@ import {
   laneTimeline,
   plural,
   round1,
+  times,
   type ChartState,
   type TaskLinkInfo,
 } from "~/shared/logic/insights/types";
@@ -167,7 +168,7 @@ export function computeForecast(current: ChartState, options: ForecastOptions = 
           addRisk(base, { code: "slipped", text: `Slipped ${formatDays(slipped)} since day ${record.firstSeenDay}` }, "medium", projectedEnd);
         }
         if (record.qaBounces > 0) {
-          addRisk(base, { code: "qa-bounce", text: `Came back from QA ${plural(record.qaBounces, "time")}` }, record.qaBounces > 1 ? "high" : "medium", projectedEnd);
+          addRisk(base, { code: "qa-bounce", text: `Came back from QA ${times(record.qaBounces)}` }, record.qaBounces > 1 ? "high" : "medium", projectedEnd);
         }
         const blockedDays = record.daysInState[State.BLOCKED] ?? 0;
         if (blockedDays >= 2 && task.state !== State.BLOCKED) {

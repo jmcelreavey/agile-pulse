@@ -14,5 +14,6 @@ export class InvalidateSprintDataUseCase extends UseCase {
     void this.useUtils.snapshot.getSprintSnapshots.invalidate();
     void this.useUtils.sprint.getMemberMetrics.invalidate();
     void this.useUtils.sprint.getMetrics.invalidate();
+    void this.useUtils.insights.invalidate();
   }
 }

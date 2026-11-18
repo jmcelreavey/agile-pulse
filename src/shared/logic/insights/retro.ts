@@ -1,6 +1,6 @@
 import { State } from "~/shared/types/State";
 import { analyseHistory, scopeByDay } from "~/shared/logic/insights/history";
-import { formatDays, plural, round1, type ChartState } from "~/shared/logic/insights/types";
+import { formatDays, round1, times, type ChartState } from "~/shared/logic/insights/types";
 
 export type RetroCategory = "slip" | "qa" | "blocker" | "scope" | "handoff" | "win";
 
@@ -38,7 +38,7 @@ export function generateRetro(history: ChartState[], current: ChartState, limit 
     const evidence: string[] = [];
     if (slipped >= 1) evidence.push(`slipped ${formatDays(slipped)}`);
     if (grew >= 0.5) evidence.push(`grew from ${formatDays(task.firstEstimate)} to ${formatDays(task.latestEstimate)}`);
-    if (task.qaBounces > 0) evidence.push(`came back from QA ${plural(task.qaBounces, "time")}`);
+    if (task.qaBounces > 0) evidence.push(`came back from QA ${times(task.qaBounces)}`);
     if (blockedDays > 0) evidence.push(`was blocked for ${formatDays(blockedDays)}`);
 
     if (evidence.length > 0) {
@@ -64,7 +64,7 @@ export function generateRetro(history: ChartState[], current: ChartState, limit 
     if (task.reassignments > 0) {
       toDiscuss.push({
         category: "handoff",
-        evidence: `"${task.name}" changed hands ${plural(task.reassignments, "time")} (${task.members.join(" to ")}).`,
+        evidence: `"${task.name}" changed hands ${times(task.reassignments)} (${task.members.join(" to ")}).`,
         question: "Was the handover planned, and did the context travel with it?",
         taskKey: task.key,
         weight: task.reassignments,

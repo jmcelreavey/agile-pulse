@@ -16,7 +16,7 @@ describe("generateRetro", () => {
     const first = retro.toDiscuss[0];
     expect(first?.taskKey).toBe("Auth");
     expect(first?.category).toBe("qa");
-    expect(first?.evidence).toBe('"Auth" slipped 4 days, grew from 2 days to 6 days and came back from QA 2 times.');
+    expect(first?.evidence).toBe('"Auth" slipped 4 days, grew from 2 days to 6 days and came back from QA twice.');
     expect(first?.question).toMatch(/\?$/);
   });
 

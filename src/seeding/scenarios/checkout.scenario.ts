@@ -102,12 +102,12 @@ export const checkoutScenario = createScenario("Create the Checkout project with
       await set("Fraud rules", State.IN_PROGRESS);
     },
     async () => {
-      await set("Card form validation", State.WITH_QA);
-    },
-    async () => {
       await set("Card form validation", State.COMPLETED);
       await set("3-D Secure challenge", State.IN_PROGRESS);
+    },
+    async () => {
       await set("Checkout API", State.WITH_QA);
+      await set("Payment webhooks", State.IN_PROGRESS);
       await set("Fraud rules", State.BLOCKED);
     },
     async () => {
@@ -136,6 +136,18 @@ export const checkoutScenario = createScenario("Create the Checkout project with
     await api.sprint.progress({ id: sprint.id });
   }
   await api.sprint.updateNotes({ id: sprint.id, notes: "Goal: card payments live behind a flag by the release on day 10." });
+
+  // Line the calendar up with the story: sprint C2 started six working days ago, C1 two weeks before.
+  const workingDaysAgo = (count: number) => {
+    const date = new Date(now);
+    for (let left = count; left > 0; ) {
+      date.setUTCDate(date.getUTCDate() - 1);
+      if (date.getUTCDay() !== 0 && date.getUTCDay() !== 6) left--;
+    }
+    return date;
+  };
+  await db.sprint.update({ where: { id: sprint.id }, data: { startedAt: workingDaysAgo(6) } });
+  await db.sprint.update({ where: { id: past.id }, data: { startedAt: workingDaysAgo(16), completedAt: workingDaysAgo(7) } });
 
   const link = async (task: string, data: { provider: string; kind: string; externalId: string; url: string; title: string; status: string; daysAgo: number }) => {
     const { daysAgo, ...rest } = data;

@@ -5,6 +5,7 @@ import { IconArrowLeft, IconEye } from "@tabler/icons-react";
 import Link from "next/link";
 import CollapsibleRichTextEditor from "~/app/components/base/CollapsibleRichTextEditor";
 import { DiscussionSection } from "~/app/components/customer/DiscussionSection";
+import { SprintInsights } from "~/app/components/insights/SprintInsights";
 import { EntityHeader } from "~/app/components/shared/EntityHeader";
 import { DeliveryChart } from "~/app/components/sprint/chart/DeliveryChart";
 import { CompleteSprintButton } from "~/app/components/sprint/CompleteSprintButton";
@@ -225,6 +226,8 @@ export const SprintView = ({
           zoomDay={zoomDay}
         />
         
+        <SprintInsights sprintId={sprintId} isCompleted={sprint.state === State.COMPLETED} />
+
         {/* Sprint Changelog Management */}
         <SprintChangelogManagement
           sprintId={sprintId}

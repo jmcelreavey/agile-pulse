@@ -59,6 +59,9 @@ export const round1 = (value: number) => Math.round(value * 10) / 10;
 export const plural = (count: number, word: string, many = `${word}s`) =>
   `${count} ${count === 1 ? word : many}`;
 
+/** "once", "twice", "3 times". */
+export const times = (count: number) => (count === 1 ? "once" : count === 2 ? "twice" : `${count} times`);
+
 export const formatDays = (days: number) => plural(round1(days), "day");
 
 /** Start and end (in sprint days) of every block on a lane, in lane order. */
