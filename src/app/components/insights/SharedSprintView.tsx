@@ -5,7 +5,7 @@ import { IconCalendarPlus } from "@tabler/icons-react";
 import Link from "next/link";
 import { StatusBadge } from "~/app/components/insights/shared";
 import { type ShareLinkUseCase } from "~/server/logic/insights/ShareUseCases";
-import { getStateColour, type State } from "~/shared/types/State";
+import { getStateColour } from "~/shared/types/State";
 
 type Shared = NonNullable<Awaited<ReturnType<ShareLinkUseCase["getShared"]>>>;
 
