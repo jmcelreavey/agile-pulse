@@ -38,10 +38,9 @@ export class AcceptInvitationUseCase extends UseCase {
     const hashedPassword = await bcrypt.hash(input.password, 12);
 
     try {
-      // Create customer and update invitation in a transaction
-      const result = await this.db.$transaction(async (tx) => {
-        // Create the customer
-        const customer = await tx.customer.create({
+      // D1 has no interactive transactions, so create the customer, then mark the invitation.
+      const result = await (async () => {
+        const customer = await this.db.customer.create({
           data: {
             email: invitation.email,
             name: input.name,
@@ -50,8 +49,7 @@ export class AcceptInvitationUseCase extends UseCase {
           },
         });
 
-        // Update invitation status to accepted
-        await tx.customerInvitation.update({
+        await this.db.customerInvitation.update({
           where: { id: invitation.id },
           data: {
             status: "accepted",
@@ -60,7 +58,7 @@ export class AcceptInvitationUseCase extends UseCase {
         });
 
         return customer;
-      });
+      })();
 
       return {
         id: result.id,

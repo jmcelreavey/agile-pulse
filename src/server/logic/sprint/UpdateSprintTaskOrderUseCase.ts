@@ -1,4 +1,3 @@
-import { type PrismaClient } from "~/generated/prisma/client";
 import { type UpdateSprintTaskOrderInputType } from "~/server/api/schemas/sprint";
 import { RecordNotFoundError } from "~/server/errors/RecordNotFoundError";
 import {
@@ -23,81 +22,48 @@ export class UpdateSprintTaskOrderUseCase extends UseCase {
     const hasChangedMember =
       currentTask.sprintMemberId !== input.sprintMemberId;
 
-    // Start a transaction to ensure order updates are atomic
-    return await this.db.$transaction(async (tx) => {
-      if (hasChangedMember) {
-        if (currentTask.sprintMemberId) {
-          // Moving from a member to unassigned or another member
-          await this.updateMemberTasksOrder(
-            currentTask.sprintMemberId,
-            tasks,
-            currentTask.order,
-            null,
-            currentTask,
-            tx as PrismaClient
-          );
-        }
-
-        // Update new member tasks order
-        if (input.sprintMemberId) {
-          await this.updateMemberTasksOrder(
-            input.sprintMemberId,
-            tasks,
-            null,
-            input.order,
-            currentTask,
-            tx as PrismaClient
-          );
-        }
-      } else if (currentTask.sprintMemberId) {
-        await this.updateMemberTasksOrder(
-          currentTask.sprintMemberId,
-          tasks,
-          currentTask.order,
-          input.order,
-          currentTask,
-          tx as PrismaClient
-        );
+    // Work out every row's new position first, then write them in one batch. D1 has no
+    // interactive transactions, but it does run a batch of statements atomically.
+    const updates: { id: number; order: number; sprintMemberId: number }[] = [];
+    if (hasChangedMember) {
+      if (currentTask.sprintMemberId) {
+        // Moving from a member to unassigned or another member
+        updates.push(...this.memberTaskOrder(currentTask.sprintMemberId, tasks, currentTask.order, null, currentTask));
       }
+      if (input.sprintMemberId) {
+        updates.push(...this.memberTaskOrder(input.sprintMemberId, tasks, null, input.order, currentTask));
+      }
+    } else if (currentTask.sprintMemberId) {
+      updates.push(...this.memberTaskOrder(currentTask.sprintMemberId, tasks, currentTask.order, input.order, currentTask));
+    }
 
-      return currentTask;
-    });
+    if (updates.length) {
+      await this.db.$transaction(
+        updates.map((task) =>
+          this.db.sprintTask.update({
+            where: { id: task.id },
+            data: { order: task.order, sprintMemberId: task.sprintMemberId },
+          })
+        )
+      );
+    }
+
+    return currentTask;
   }
 
-  private async updateMemberTasksOrder(
+  private memberTaskOrder(
     sprintMemberId: number,
     tasks: GetSprintTasksUseCaseType,
     previousOrder: number | null,
     newOrder: number | null,
-    currentTask?: GetSprintTasksUseCaseType[0],
-    tx?: PrismaClient
+    currentTask?: GetSprintTasksUseCaseType[0]
   ) {
-    const memberTasks = tasks.filter(
-      (task) => task.sprintMemberId === sprintMemberId
-    );
-
-    const updatedTasks = ReorderUtil(
-      previousOrder,
-      newOrder,
-      memberTasks,
-      currentTask
-    );
-
-    // Use transaction if provided
-    const db = tx ?? this.db;
-
-    // Update all tasks in a single transaction
-    const updatePromises = updatedTasks.map((task) =>
-      db.sprintTask.update({
-        where: { id: task.id },
-        data: {
-          order: task.order,
-          sprintMemberId: sprintMemberId,
-        },
-      })
-    );
-
-    await Promise.all(updatePromises);
+    const memberTasks = tasks.filter((task) => task.sprintMemberId === sprintMemberId);
+    return ReorderUtil(previousOrder, newOrder, memberTasks, currentTask).map((task) => ({
+      id: task.id,
+      order: task.order,
+      sprintMemberId,
+    }));
   }
 }
 

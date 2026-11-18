@@ -42,7 +42,7 @@ Archiving a project, sprint, member or task creates a `DeleteRecord` and sets `d
 
 ### Transactions on D1
 
-D1 doesn't support interactive transactions, so Prisma runs `$transaction` blocks as individual statements there. The code keeps its transactions so it stays correct on databases that do support them.
+D1 doesn't support interactive transactions (`$transaction(async (tx) => ...)`), and Prisma rejects them there. Write code that needs several changes at once as a batch, `$transaction([...])`, which D1 runs atomically, or as independent statements.
 
 ## Optional integrations
 
