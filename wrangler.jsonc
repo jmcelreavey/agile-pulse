@@ -1,0 +1,23 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "agile-pulse-demo",
+  "main": "worker.ts",
+  "compatibility_date": "2026-11-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
+  "workers_dev": true,
+  "observability": { "enabled": true },
+  "triggers": { "crons": ["0 4 * * *"] },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "agile-pulse-demo",
+      "database_id": "49d350fd-7b15-4166-a5bf-4f0794ca2fbe"
+    }
+  ],
+  "vars": {
+    "DEMO_MODE": "true",
+    "NEXT_PUBLIC_MODE": "production",
+    "SITE_URL": "https://agile-pulse-demo.j-mcelreavey.workers.dev"
+  }
+}

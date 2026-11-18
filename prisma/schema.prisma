@@ -1,0 +1,484 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+    provider     = "prisma-client"
+    output       = "../src/generated/prisma"
+    moduleFormat = "esm"
+    runtime      = "cloudflare"
+    // The small query compiler keeps the Worker inside the free plan size limit.
+    compilerBuild = "small"
+}
+
+// Node.js build of the same client for scripts (seeding, demo SQL export).
+generator nodeClient {
+    provider     = "prisma-client"
+    output       = "../src/generated/prisma-node"
+    moduleFormat = "esm"
+    runtime      = "nodejs"
+}
+
+datasource db {
+    provider = "sqlite"
+}
+
+model TRPCAudit {
+    id           Int     @id @default(autoincrement())
+    routerName   String
+    functionName String
+    inputs       String?
+    createdById  Int?
+
+    createdBy User? @relation(fields: [createdById], references: [id])
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([routerName, functionName])
+    @@index([createdById])
+}
+
+// Necessary for Next auth
+model Account {
+    id                       Int     @id @default(autoincrement())
+    userId                   Int
+    type                     String
+    provider                 String
+    providerAccountId        String
+    refresh_token            String?
+    access_token             String?
+    expires_at               Int?
+    token_type               String?
+    scope                    String?
+    id_token                 String?
+    session_state            String?
+    refresh_token_expires_in Int?
+
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@unique([provider, providerAccountId])
+    @@index([userId])
+}
+
+model Session {
+    id           Int      @id @default(autoincrement())
+    sessionToken String   @unique
+    userId       Int
+    expires      DateTime
+
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@index([userId])
+}
+
+model User {
+    id              Int       @id @default(autoincrement())
+    name            String?
+    email           String?   @unique
+    emailVerified   DateTime?
+    image           String?
+    domain          String?
+    jiraAccountId   String?
+    jiraAccessToken String?
+    jiraCloudId     String?
+    fullName        String?
+
+    accounts           Account[]
+    sessions           Session[]
+    tRPCAudit          TRPCAudit[]
+    CustomerInvitation CustomerInvitation[]
+    changelogs         Changelog[]
+    sharedChangelogs   ChangelogSharing[]   @relation("ChangelogSharedBy")
+    developerComments  DeveloperComment[]
+
+    @@index([email])
+    @@index([jiraAccountId])
+}
+
+model VerificationToken {
+    identifier String
+    token      String   @unique
+    expires    DateTime
+
+    @@unique([identifier, token])
+    @@index([identifier])
+}
+
+model Customer {
+    id             Int     @id @default(autoincrement())
+    email          String  @unique
+    name           String
+    companyName    String?
+    hashedPassword String
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    comments            CustomerComment[]
+    customerInvitations CustomerInvitation[]
+    changelogSharings   ChangelogSharing[]
+
+    @@index([email])
+    @@index([id])
+}
+
+model CustomerInvitation {
+    id          Int      @id @default(autoincrement())
+    email       String
+    token       String   @unique
+    projectId   Int
+    invitedById Int
+    status      String   @default("pending") // pending, accepted, expired, cancelled
+    expiresAt   DateTime
+    customerId  Int?
+
+    createdAt DateTime @default(now())
+
+    project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+    invitedBy User      @relation(fields: [invitedById], references: [id], onDelete: Cascade, onUpdate: Cascade)
+    customer  Customer? @relation(fields: [customerId], references: [id])
+
+    @@index([email])
+    @@index([token])
+    @@index([projectId])
+    @@index([status])
+}
+
+model CustomerComment {
+    id         Int    @id @default(autoincrement())
+    customerId Int
+    projectId  Int
+    sprintId   Int?   // Optional - null for project-level comments
+    content    String
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+    project  Project  @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+    sprint   Sprint?  @relation(fields: [sprintId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+    @@index([customerId])
+    @@index([projectId])
+    @@index([sprintId])
+}
+
+model DeveloperComment {
+    id        Int    @id @default(autoincrement())
+    userId    Int
+    projectId Int
+    sprintId  Int?   // Optional - null for project-level comments
+    content   String
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    user    User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+    project Project  @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+    sprint  Sprint?  @relation(fields: [sprintId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+    @@index([userId])
+    @@index([projectId])
+    @@index([sprintId])
+}
+
+model Member {
+    id              Int    @id @default(autoincrement())
+    name            String
+    deletedRecordId Int?
+    snapshotId      Int?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    deletedRecord DeleteRecord?  @relation(fields: [deletedRecordId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+    snapshot      Snapshot?      @relation(fields: [snapshotId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+    sprints       SprintMember[]
+
+    @@index([deletedRecordId])
+    @@index([snapshotId])
+    @@index([name])
+}
+
+model Project {
+    id                 Int       @id @default(autoincrement())
+    name               String
+    description        String
+    state              String    @default("Not Started")
+    notes              String?
+    startedAt          DateTime?
+    completedAt        DateTime?
+    colour             String?
+    deletedRecordId    Int?
+    snapshotId         Int?
+    ticketUrlTemplate  String?
+    ticketUrlPrefix    String?
+    domain             String?
+    jiraProjectKey     String?
+    jiraProjectId      String?
+    lastReleaseVersion String?   @default("0.0.0") // Stores the last release version (e.g., "1.2.3")
+    sharedNotes       String?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    deletedRecord      DeleteRecord?        @relation(fields: [deletedRecordId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+    snapshot           Snapshot?            @relation(fields: [snapshotId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+    sprints            Sprint[]
+    CustomerInvitation CustomerInvitation[]
+    CustomerComment    CustomerComment[]
+    DeveloperComment   DeveloperComment[]
+
+    @@index([deletedRecordId])
+    @@index([snapshotId])
+    @@index([state])
+    @@index([name])
+    @@index([jiraProjectKey])
+}
+
+model Sprint {
+    id              Int       @id @default(autoincrement())
+    reference       String
+    days            Float
+    daysRemaining   Float
+    state           String    @default("Not Started")
+    startedAt       DateTime?
+    completedAt     DateTime?
+    projectId       Int
+    deletedRecordId Int?
+    snapshotId      Int?
+    notes           String?
+    jiraSprintId    String?
+    lastSyncedAt    DateTime?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    project         Project          @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+    deletedRecord   DeleteRecord?    @relation(fields: [deletedRecordId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+    snapshot        Snapshot?        @relation(fields: [snapshotId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+    sprintTasks     SprintTask[]
+    sprintMembers   SprintMember[]
+    sprintDeadlines SprintDeadline[]
+    changelogs      Changelog[]
+    comments        CustomerComment[]
+    developerComments DeveloperComment[]
+
+    @@index([projectId])
+    @@index([deletedRecordId])
+    @@index([snapshotId])
+    @@index([state])
+    @@index([reference])
+    @@index([jiraSprintId])
+}
+
+model Task {
+    id              Int     @id @default(autoincrement())
+    name            String
+    description     String?
+    state           String  @default("Not Started")
+    deletedRecordId Int?
+    snapshotId      Int?
+    jiraIssueKey    String?
+    jiraIssueId     String?
+    jiraIssueType   String?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    deletedRecord DeleteRecord? @relation(fields: [deletedRecordId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+    snapshot      Snapshot?     @relation(fields: [snapshotId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+    sprintTasks   SprintTask[]
+
+    @@index([deletedRecordId])
+    @@index([snapshotId])
+    @@index([state])
+    @@index([name])
+    @@index([jiraIssueKey])
+}
+
+model Deadline {
+    id              Int     @id @default(autoincrement())
+    name            String
+    colour          String
+    description     String?
+    deletedRecordId Int?
+    snapshotId      Int?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    sprintDeadlines SprintDeadline[]
+    deletedRecord   DeleteRecord?    @relation(fields: [deletedRecordId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+    snapshot        Snapshot?        @relation(fields: [snapshotId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+    @@index([deletedRecordId])
+    @@index([snapshotId])
+    @@index([name])
+}
+
+model SprintDeadline {
+    id              Int  @id @default(autoincrement())
+    sprintId        Int
+    deadlineId      Int
+    day             Int
+    deletedRecordId Int?
+    snapshotId      Int?
+
+    createdAt     DateTime      @default(now())
+    updatedAt     DateTime      @updatedAt
+    sprint        Sprint        @relation(fields: [sprintId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+    deadline      Deadline      @relation(fields: [deadlineId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+    deletedRecord DeleteRecord? @relation(fields: [deletedRecordId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+    snapshot      Snapshot?     @relation(fields: [snapshotId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+    @@unique([sprintId, day])
+    @@index([deletedRecordId])
+    @@index([snapshotId])
+    @@index([sprintId])
+    @@index([deadlineId])
+}
+
+model SprintMember {
+    id              Int  @id @default(autoincrement())
+    sprintId        Int
+    memberId        Int
+    order           Int
+    deletedRecordId Int?
+    snapshotId      Int?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    sprint        Sprint        @relation(fields: [sprintId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+    member        Member        @relation(fields: [memberId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+    sprintTasks   SprintTask[]
+    deletedRecord DeleteRecord? @relation(fields: [deletedRecordId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+    snapshot      Snapshot?     @relation(fields: [snapshotId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+    @@index([sprintId, memberId, deletedRecordId, order])
+    @@index([sprintId])
+    @@index([memberId])
+    @@index([deletedRecordId])
+    @@index([snapshotId])
+}
+
+model SprintTask {
+    id              Int     @id @default(autoincrement())
+    sprintId        Int
+    days            Float
+    order           Int
+    taskId          Int
+    ticketUrl       String?
+    sprintMemberId  Int?
+    deletedRecordId Int?
+    snapshotId      Int?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    sprint        Sprint        @relation(fields: [sprintId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+    task          Task          @relation(fields: [taskId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+    sprintMember  SprintMember? @relation(fields: [sprintMemberId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+    deletedRecord DeleteRecord? @relation(fields: [deletedRecordId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+    snapshot      Snapshot?     @relation(fields: [snapshotId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+    @@index([sprintId, sprintMemberId, taskId, order, deletedRecordId])
+    @@index([sprintId])
+    @@index([taskId])
+    @@index([sprintMemberId])
+    @@index([deletedRecordId])
+    @@index([snapshotId])
+}
+
+model DeleteRecord {
+    id       Int     @id @default(autoincrement())
+    sourceId Int
+    reason   String?
+    source   String
+
+    createdAt       DateTime         @default(now())
+    updatedAt       DateTime         @updatedAt
+    members         Member[]
+    projects        Project[]
+    sprints         Sprint[]
+    tasks           Task[]
+    sprintMembers   SprintMember[]
+    sprintTasks     SprintTask[]
+    deadlines       Deadline[]
+    sprintDeadlines SprintDeadline[]
+
+    @@index([sourceId, source])
+}
+
+model Snapshot {
+    id       Int     @id @default(autoincrement())
+    sourceId Int
+    details  String?
+    source   String
+
+    createdAt       DateTime         @default(now())
+    updatedAt       DateTime         @updatedAt
+    members         Member[]
+    projects        Project[]
+    sprints         Sprint[]
+    tasks           Task[]
+    deadlines       Deadline[]
+    sprintMembers   SprintMember[]
+    sprintTasks     SprintTask[]
+    sprintDeadlines SprintDeadline[]
+
+    @@index([sourceId, source])
+}
+
+model Changelog {
+    id             Int       @id @default(autoincrement())
+    sprintId       Int
+    content        String
+    tone           String    @default("TECHNICAL")
+    sharedAt       DateTime?
+    sharedViaEmail Boolean   @default(false)
+    exportedToPdf  Boolean   @default(false)
+    createdBy      Int? // User who created/last modified the changelog
+    taskIds        String? // JSON array of task IDs included in this changelog
+    version        Int       @default(1) // Version tracking for changelog iterations
+    isPublished    Boolean   @default(false) // Whether this version is published
+    releaseVersion String? // Semantic version (e.g., "1.2.3") for this release
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    sprint         Sprint             @relation(fields: [sprintId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+    creator        User?              @relation(fields: [createdBy], references: [id], onDelete: SetNull, onUpdate: Cascade)
+    sharingHistory ChangelogSharing[]
+
+    @@index([sprintId])
+    @@index([sharedAt])
+    @@index([createdBy])
+    @@index([isPublished])
+}
+
+model ChangelogSharing {
+    id             Int     @id @default(autoincrement())
+    changelogId    Int
+    method         String // 'email' or 'pdf' or 'link'
+    recipientEmail String? // For email sharing
+    recipientName  String? // For email sharing
+    customerId     Int? // For customer sharing
+    sharedBy       Int // User who performed the sharing
+    status         String  @default("pending") // 'pending', 'sent', 'failed', 'delivered'
+    errorMessage   String? // If sharing failed
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    changelog    Changelog @relation(fields: [changelogId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+    customer     Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+    sharedByUser User      @relation("ChangelogSharedBy", fields: [sharedBy], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+    @@index([changelogId])
+    @@index([customerId])
+    @@index([sharedBy])
+    @@index([status])
+    @@index([method])
+}

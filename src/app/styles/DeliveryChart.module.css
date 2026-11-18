@@ -1,0 +1,8 @@
+.chartTask:not(:last-child) {
+  border-right: 1px solid
+    light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-6));
+}
+
+.resizeHandle {
+  cursor: ew-resize;
+}

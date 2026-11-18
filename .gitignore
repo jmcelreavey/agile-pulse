@@ -1,0 +1,33 @@
+# dependencies
+/node_modules
+
+# generated
+/src/generated/
+next-env.d.ts
+*.tsbuildinfo
+
+# builds
+/.next/
+/.open-next/
+/out/
+/build
+/coverage
+
+# local data and Cloudflare state
+/.demo/
+/.wrangler/
+/prisma/*.db
+/prisma/*.db-journal
+
+# env and secrets: only .env.example is committed
+.env
+.env*.local
+.env.production
+.dev.vars*
+*.pem
+
+# misc
+.DS_Store
+*.log
+.idea
+.vscode
