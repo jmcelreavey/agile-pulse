@@ -18,6 +18,16 @@ export function buildResetStatements(templateTables: string[]): string[] {
   ];
 }
 
+/**
+ * True when nobody has changed the demo since the last reset: no tRPC mutations were audited (the
+ * reset clears the audit table) and no task was touched outside tRPC, for example by the weekday
+ * stale-PR sweep. Skipping the reset then saves a full rewrite of every table, which matters on
+ * D1's free tier of 100,000 written rows a day.
+ */
+export function isUntouched(state: { audits: number; taskStamp: string | number | null; templateTaskStamp: string | number | null }) {
+  return state.audits === 0 && String(state.taskStamp) === String(state.templateTaskStamp);
+}
+
 /** Restore the shared demo workspace. Run daily by the Worker's cron trigger. */
 export async function resetDemoDatabase(db: D1Database) {
   const { results } = await db
@@ -26,6 +36,15 @@ export async function resetDemoDatabase(db: D1Database) {
     .all<{ name: string }>();
   const templates = results.map((row) => row.name);
   if (templates.length === 0) return 0;
+
+  if (templates.includes(`${TEMPLATE_PREFIX}Task`)) {
+    const state = await db
+      .prepare(
+        `SELECT (SELECT COUNT(*) FROM "TRPCAudit") AS audits, (SELECT MAX("updatedAt") FROM "Task") AS taskStamp, (SELECT MAX("updatedAt") FROM "${TEMPLATE_PREFIX}Task") AS templateTaskStamp`
+      )
+      .first<{ audits: number; taskStamp: string | number | null; templateTaskStamp: string | number | null }>();
+    if (state && isUntouched(state)) return 0;
+  }
 
   await db.batch([
     db.prepare('DELETE FROM "TRPCAudit"'),

@@ -34,7 +34,7 @@ export default {
       ctx.waitUntil(runDailyJobs(env, ctx));
       return;
     }
-    ctx.waitUntil(resetDemoDatabase(env.DB).then((count) => console.log(`Demo reset: ${count} tables restored`)));
+    ctx.waitUntil(resetDemoDatabase(env.DB).then((count) => console.log(count ? `Demo reset: ${count} tables restored` : "Demo reset skipped: nothing changed")));
   },
 };
 

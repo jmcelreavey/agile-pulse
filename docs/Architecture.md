@@ -84,4 +84,4 @@ The `/docs` pages are generated from the markdown files in `docs/`. After editin
 
 ## Demo data
 
-`npm run demo:sql` builds a SQLite database by running the seed scenarios through the real tRPC API, then writes `.demo/demo.sql` with the schema, the data and a `tpl_` copy of each table. The Worker's daily cron (`0 4 * * *`) restores every table from its `tpl_` copy, so the shared demo returns to a clean state each day. A second cron (`0 8 * * 1-5`) runs the weekday job: it flags stale pull requests and sends standup digests.
+`npm run demo:sql` builds a SQLite database by running the seed scenarios through the real tRPC API, then writes `.demo/demo.sql` with the schema, the data and a `tpl_` copy of each table. The Worker's daily cron (`0 4 * * *`) restores every table from its `tpl_` copy, so the shared demo returns to a clean state each day. If nothing changed since the last reset (no audited mutations and no task edits), the reset is skipped: a full restore writes every row again, and D1's free tier allows 100,000 written rows a day. A second cron (`0 8 * * 1-5`) runs the weekday job: it flags stale pull requests and sends standup digests.
