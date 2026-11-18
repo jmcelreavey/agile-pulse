@@ -226,7 +226,7 @@ export const SprintView = ({
           zoomDay={zoomDay}
         />
         
-        <SprintInsights sprintId={sprintId} isCompleted={sprint.state === State.COMPLETED} />
+        <SprintInsights sprintId={sprintId} isCompleted={sprint.state === State.COMPLETED} isNotStarted={sprint.state === State.NOT_STARTED} />
 
         {/* Sprint Changelog Management */}
         <SprintChangelogManagement

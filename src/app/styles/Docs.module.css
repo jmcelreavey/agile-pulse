@@ -28,29 +28,28 @@
   }
 }
 
-.navToggle {
+.navMobile {
   display: none;
+}
+
+.navToggle {
   cursor: pointer;
   font-weight: 600;
   padding: 10px 14px;
   border: 1px solid var(--mantine-color-default-border);
   border-radius: var(--mantine-radius-md);
-  list-style: none;
 }
 
-.navToggle::-webkit-details-marker {
-  display: none;
+.navGroups {
+  padding-top: 8px;
 }
 
 @media (max-width: 62em) {
-  .navToggle {
+  .navMobile {
     display: block;
   }
-  .navDetails:not([open]) .navGroups {
+  .navDesktop {
     display: none;
-  }
-  .navGroups {
-    padding-top: 8px;
   }
 }
 

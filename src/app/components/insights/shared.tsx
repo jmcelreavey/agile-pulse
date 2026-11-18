@@ -38,7 +38,7 @@ export const CopyTextButton = ({ value, label = "Copy" }: { value: string; label
 );
 
 export const Hint = ({ children }: { children: React.ReactNode }) => (
-  <Text size="sm" c="dimmed">
+  <Text size="sm" c="dimmed" component="div">
     {children}
   </Text>
 );

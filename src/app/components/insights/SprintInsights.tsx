@@ -11,7 +11,7 @@ import { SharePanel } from "~/app/components/insights/SharePanel";
 import { StandupPanel } from "~/app/components/insights/StandupPanel";
 
 /** Forecast, standup, retro, planner, linked work, customer update and sharing for one sprint. */
-export const SprintInsights = ({ sprintId, isCompleted }: { sprintId: number; isCompleted: boolean }) => (
+export const SprintInsights = ({ sprintId, isCompleted, isNotStarted }: { sprintId: number; isCompleted: boolean; isNotStarted?: boolean }) => (
   <Paper withBorder p={{ base: "md", sm: "xl" }} mt="xl" id="insights">
     <Title order={3} mb={4}>
       Sprint insights
@@ -20,7 +20,7 @@ export const SprintInsights = ({ sprintId, isCompleted }: { sprintId: number; is
       Worked out from the chart and its daily snapshots. Nothing here needs an AI key; with one set, a few answers get written up by
       OpenAI.
     </Text>
-    <Tabs defaultValue="forecast" keepMounted={false}>
+    <Tabs defaultValue={isNotStarted ? "planner" : "forecast"} keepMounted={false}>
       <Tabs.List mb="lg" style={{ overflowX: "auto", flexWrap: "nowrap" }}>
         <Tabs.Tab value="forecast" leftSection={<IconCalendarStats size={16} />}>
           Forecast

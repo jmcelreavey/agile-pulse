@@ -127,7 +127,12 @@ export function planSprint(items: BacklogItem[], members: PlannerMember[], sprin
         estimated,
         member: pinned.member,
         memberId: pinned.memberId,
-        reason: before >= days ? `Asked for ${pinned.member}` : `Asked for ${pinned.member}, who only had ${before} days free`,
+        reason:
+          before >= days
+            ? `Asked for ${pinned.member}`
+            : before > 0
+              ? `Asked for ${pinned.member}, who only had ${before} days free`
+              : `Asked for ${pinned.member}, who was already full`,
       });
       continue;
     }
