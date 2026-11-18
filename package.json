@@ -21,6 +21,7 @@
     "db:studio": "prisma studio",
     "db:seed": "npm run demo:sql",
     "demo:sql": "tsx ./scripts/export-demo-sql.ts",
+    "docs:build": "tsx ./scripts/build-docs.ts",
     "cf:build": "opennextjs-cloudflare build",
     "cf:preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "cf:deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",

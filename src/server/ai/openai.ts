@@ -10,6 +10,7 @@ export async function complete(system: string, user: string, options: { maxToken
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: { Authorization: `Bearer ${env.OPENAI_API_KEY}`, "Content-Type": "application/json" },
+      signal: AbortSignal.timeout(10_000),
       body: JSON.stringify({
         model: env.OPENAI_MODEL,
         messages: [

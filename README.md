@@ -16,6 +16,20 @@ Sprint planning you can see at a glance. Agile Pulse lays each sprint out as a c
 - **Changelogs.** Turn completed tasks into release notes, edit them in a rich text editor, share them with customers by email or save them as PDF. Uses OpenAI when a key is set and a built-in writer otherwise.
 - **Jira.** Optionally sign in with Atlassian and pull sprints and issues from Jira.
 
+### Sprint insights
+
+Agile Pulse was built before AI tools were everywhere. The newer features keep that spirit: each one works out its answer with plain, tested code from the chart and its daily snapshots, and AI only writes it up when an OpenAI key is set. Everything below works in the keyless demo. [Why it's built this way](docs/Overview.md).
+
+- **Forecast.** When the sprint will land, each person's pace and which tasks are at risk, with reasons (behind plan, slipped, QA bounces, blocked time, stale PRs). Optional one-line AI "why". [More](docs/Forecast.md)
+- **GitHub and Jira sync.** Link tasks to pull requests and issues. Signed webhooks move tasks along: a merged PR completes its task, and a PR that goes quiet marks it at risk. [More](docs/Integrations.md)
+- **Standup digest.** What moved since yesterday, today's focus per person and blockers, in the app or sent to Slack and email on weekday mornings. [More](docs/Standup.md)
+- **Sprint planner.** Paste a backlog and get it laid out by capacity, leave and each person's past completion rate, then adjust by dragging. AI only estimates unsized items. [More](docs/Planner.md)
+- **Retro prompts.** Discussion points drawn from the sprint's replay, each with the evidence and an open question. [More](docs/Retro.md)
+- **MCP endpoint.** Connect Claude, Cursor or ChatGPT with a personal token to read forecasts and standups and move tasks. [More](docs/MCP.md)
+- **Customer updates.** A drafted weekly update and a forecast-based ETA with a confidence level, shown in the customer portal. [More](docs/CustomerPortal.md)
+- **Sharing.** Public read-only sprint links and an iCal feed of deadlines, sprint dates and the forecast. [More](docs/Sharing.md)
+- **Keyboard and dark mode.** Move tasks with the keyboard, and a theme that follows your system. [More](docs/Accessibility.md)
+
 | Projects | Project overview |
 | --- | --- |
 | ![Projects list](docs/screenshots/projects.png) | ![A project and its sprints](docs/screenshots/project.png) |
@@ -33,7 +47,7 @@ npx wrangler d1 execute agile-pulse-demo --local --file=.demo/demo.sql
 npm run dev                                                   # http://localhost:3033
 ```
 
-No keys are needed. `npm run dev` uses a local D1 database through Wrangler, and you sign in with the demo account. To switch on Google or Jira sign-in, AI changelogs or email, copy `.env.example` to `.env` and fill in the values you need.
+No keys are needed. `npm run dev` uses a local D1 database through Wrangler, and you sign in with the demo account. To switch on Google or Jira sign-in, AI, email, webhooks or Slack digests, copy `.env.example` to `.env` and fill in the values you need. [docs/Configuration.md](docs/Configuration.md) lists every variable, including the newer ones (`GITHUB_WEBHOOK_SECRET`, `JIRA_WEBHOOK_SECRET`, `SLACK_WEBHOOK_URL`, `DIGEST_EMAIL_TO`, `STALE_PR_DAYS`).
 
 ```bash
 npm run check     # typecheck, lint and unit tests
@@ -55,7 +69,7 @@ Set `SITE_URL` in `wrangler.jsonc` to your Worker's URL. Optional integrations a
 
 ## How it's built
 
-Next.js 16, React 19, tRPC 11, Prisma 7 on Cloudflare D1, Auth.js, Mantine 9 and Tiptap, deployed with OpenNext for Cloudflare. See [docs/Architecture.md](docs/Architecture.md) for the layout, data access, soft delete and demo reset, and the other files in [docs](docs) for each feature.
+Next.js 16, React 19, tRPC 11, Prisma 7 on Cloudflare D1, Auth.js, Mantine 9 and Tiptap, deployed with OpenNext for Cloudflare. See [docs/Architecture.md](docs/Architecture.md) for the layout, data access, soft delete and demo reset, and the other files in [docs](docs) for each feature. The same docs are published in the app at [/docs](https://agile-pulse-demo.j-mcelreavey.workers.dev/docs); run `npm run docs:build` after editing them.
 
 ## Licence
 

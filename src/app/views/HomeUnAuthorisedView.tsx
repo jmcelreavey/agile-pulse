@@ -10,7 +10,7 @@ import {
   Title,
   Tooltip,
 } from "@mantine/core";
-import { IconPlayerPlay, IconUserCircle } from "@tabler/icons-react";
+import { IconBook, IconPlayerPlay, IconUserCircle } from "@tabler/icons-react";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
 import Balancer from "react-wrap-balancer";
@@ -107,6 +107,16 @@ export const HomeUnAuthorisedView = () => {
           </Tooltip>
         </Flex>
       )}
+
+      <Text size="sm" c="dimmed" ta="center" maw={560}>
+        <Balancer>
+          Forecasts, standups, retros and sprint planning worked out from your chart, with optional AI on top.{" "}
+          <Link href="/docs">Read the docs</Link> to see how it all works.
+        </Balancer>
+      </Text>
+      <Button component={Link} href="/docs/overview" variant="subtle" size="sm" leftSection={<IconBook size={16} />}>
+        How it works and why
+      </Button>
     </Stack>
   );
 };

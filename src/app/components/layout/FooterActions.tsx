@@ -12,6 +12,9 @@ export const FooterActions = () => {
           Demo data resets every day
         </Text>
       )}
+      <Anchor size="sm" href="/docs">
+        Docs
+      </Anchor>
       {repoUrl && (
         <ActionIcon
           variant="subtle"

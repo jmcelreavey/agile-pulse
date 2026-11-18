@@ -1,49 +1,30 @@
 # Authentication
 
-Agile Pulse uses NextAuth.js to handle authentication. Currently, the system supports sign-up and sign-in through Google accounts.
+Agile Pulse uses Auth.js (NextAuth v5) with JWT sessions. Sign-in options switch on from environment variables, so a fresh install works with no accounts set up at all.
 
-## Sign Up / Sign In
+## Sign-in options
 
-### Supported Providers
+| Option | Who it's for | Switched on by |
+| --- | --- | --- |
+| Demo account | Trying the app; the public demo | `DEMO_MODE`, or no Google sign-in configured |
+| Google | Team members | `AUTH_GOOGLE_ID` and `AUTH_GOOGLE_SECRET` |
+| Atlassian | Team members who want Jira import | `AUTH_JIRA_CLIENT_ID` and `AUTH_JIRA_CLIENT_SECRET` |
+| Email and password | Customers invited to the [customer portal](CustomerPortal.md) | Always available to invited customers |
 
-At present, Agile Pulse supports authentication through:
+After signing in, team members land on their projects and customers on their portal dashboard. Team pages redirect customers to the portal and the portal redirects team members away.
 
-- Google
+## Project access
 
-### Process
+Team members see projects by email domain. A user with an `example.com` address sees the projects that belong to `example.com`. Customers see only the projects they were invited to.
 
-1. Users can initiate the sign-up/sign-in process from the login page.
-2. They will be redirected to the Google authentication page.
-3. After successful authentication with Google, users are redirected back to Agile Pulse.
+## Tokens for tools
 
-### NextAuth.js Integration
+[MCP](MCP.md) clients don't use sign-in. They send a personal API token created on the **API tokens & MCP** page. Agile Pulse stores only a SHA-256 hash of each token, and a token acts with its owner's access.
 
-NextAuth.js is used to handle the OAuth flow with Google. It provides:
+## Public pages
 
-- Secure token handling
-- Session management
-- Easy integration with Next.js applications
+The landing page, `/docs`, `/sign-in` and [shared sprint links](Sharing.md) need no account. Shared links reveal only the one sprint they were made for.
 
-For developer information on NextAuth.js setup, refer to the [NextAuth.js documentation](https://next-auth.js.org/).
+## Roles and permissions
 
-## System Access
-
-Upon successful authentication:
-
-1. Users are redirected to the Agile Pulse home page.
-2. The home page displays a list of projects the user has access to.
-
-## Project Access
-
-Access to projects is determined by the user's email domain:
-
-- A user's email domain (e.g., "example.com" for <john.doe@example.com>) grants access to projects associated with that domain.
-- Users can only view and interact with projects linked to their email domain.
-
-## User Roles and Permissions
-
-Currently, all users have the same permissions.
-
-## Security Considerations
-
-Sessions are stored in the database.
+All team members in a domain have the same permissions. Customers can read their projects and comment; they can't change the chart.
