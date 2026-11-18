@@ -5,7 +5,7 @@ import { IconCalendarPlus } from "@tabler/icons-react";
 import Link from "next/link";
 import { StatusBadge } from "~/app/components/insights/shared";
 import { type ShareLinkUseCase } from "~/server/logic/insights/ShareUseCases";
-import { columnCountForDays, createTimelineScale, percentForElapsedDays } from "~/shared/logic/sprint/chart/timelineScale";
+import { columnCountForDays, createTimelineScale, currentDayLineDays, currentDayNumber, percentForElapsedDays } from "~/shared/logic/sprint/chart/timelineScale";
 import { getStateColour } from "~/shared/types/State";
 
 type Shared = NonNullable<Awaited<ReturnType<ShareLinkUseCase["getShared"]>>>;
@@ -30,7 +30,8 @@ export const SharedSprintView = ({ data }: { data: Shared }) => {
   );
   const scale = createTimelineScale(Array.from({ length: span }, (_, i) => i + 1));
   const pct = (days: number) => `${(days / span) * 100}%`;
-  const todayPercent = percentForElapsedDays(scale, forecast.currentDay);
+  // Like the main chart, the red line marks the start of the current day.
+  const todayPercent = percentForElapsedDays(scale, currentDayLineDays(forecast.currentDay));
   return (
     <Container size="lg" py="xl">
       <Stack gap="lg">
@@ -47,7 +48,7 @@ export const SharedSprintView = ({ data }: { data: Shared }) => {
         </Group>
         <Text>{forecast.summary}</Text>
         <SimpleGrid cols={{ base: 2, sm: 4 }}>
-          <Stat label="Day" value={`${forecast.currentDay} of ${forecast.sprintDays}`} />
+          <Stat label="Day" value={`${currentDayNumber(forecast.currentDay)} of ${forecast.sprintDays}`} />
           <Stat label="Forecast finish" value={`Day ${forecast.forecastEnd}`} />
           <Stat label="Pace" value={`${Math.round(forecast.pace * 100)}%`} />
           <Stat label="At risk" value={String(forecast.atRisk.length)} />
@@ -90,7 +91,7 @@ export const SharedSprintView = ({ data }: { data: Shared }) => {
               </div>
             ))}
             <Text size="xs" c="dimmed">
-              Bars are sized in days. The red line is today (day {forecast.currentDay}).
+              Bars are sized in days. The red line is the start of today (day {currentDayNumber(forecast.currentDay)}).
             </Text>
           </Stack>
         </Paper>
