@@ -2,6 +2,7 @@ import { changelogRouter } from "~/server/api/routers/changelog";
 import { customerRouter } from "~/server/api/routers/customer";
 import { deadlineRouter } from "~/server/api/routers/deadline";
 import { deletedRouter } from "~/server/api/routers/deleted";
+import { insightsRouter } from "~/server/api/routers/insights";
 import { jiraRouter } from "~/server/api/routers/jira";
 import { memberRouter } from "~/server/api/routers/member";
 import { projectRouter } from "~/server/api/routers/project";
@@ -26,6 +27,7 @@ export const appRouter = createTRPCRouter({
   jira: jiraRouter,
   customer: customerRouter,
   changelog: changelogRouter,
+  insights: insightsRouter,
 });
 
 // export type definition of API

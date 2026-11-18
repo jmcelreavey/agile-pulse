@@ -2,7 +2,7 @@ import { State } from "~/shared/types/State";
 import { type ChartState, type ChartTask } from "~/shared/logic/insights/types";
 
 /** Build chart states tersely in tests: lanes are [member, [key, days, state][]]. */
-export function chart(day: number, sprintDays: number, lanes: [string, [string, number, string][]][]): ChartState {
+export function chart(day: number, sprintDays: number, lanes: [string, [string, number, State][]][]): ChartState {
   return {
     day,
     sprintDays,

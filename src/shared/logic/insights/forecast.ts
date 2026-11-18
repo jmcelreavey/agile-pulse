@@ -124,16 +124,14 @@ export function computeForecast(current: ChartState, options: ForecastOptions = 
 
     // Walk the lane again to project each unfinished task's end at this pace.
     let cursor = today;
-    let planCursor = 0;
     for (const { task, start, end } of blocks) {
-      planCursor = end;
       if (isTimeOff(task)) {
         cursor += Math.max(0, end - Math.max(start, today));
         continue;
       }
       if (task.state === State.COMPLETED) continue;
       cursor += today === 0 ? task.days : (task.days * (1 - creditFor(task.state))) / pace;
-      const projectedEnd = round1(Math.max(cursor, today === 0 ? planCursor : cursor));
+      const projectedEnd = round1(today === 0 ? end : cursor);
       const base = { key: task.key, sprintTaskId: task.sprintTaskId, name: task.name, member: lane.member, state: task.state };
       if (projectedEnd > current.sprintDays + 0.01) {
         addRisk(

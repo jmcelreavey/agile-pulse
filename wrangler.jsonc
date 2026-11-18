@@ -7,7 +7,7 @@
   "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
   "workers_dev": true,
   "observability": { "enabled": true },
-  "triggers": { "crons": ["0 4 * * *"] },
+  "triggers": { "crons": ["0 4 * * *", "0 8 * * 1-5"] },
   "d1_databases": [
     {
       "binding": "DB",

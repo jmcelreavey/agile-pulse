@@ -7,7 +7,7 @@ export type ChartTask = {
   sprintTaskId?: number;
   name: string;
   days: number;
-  state: string;
+  state: State;
 };
 
 export type ChartLane = { member: string; memberId?: number; tasks: ChartTask[] };

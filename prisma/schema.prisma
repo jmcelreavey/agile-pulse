@@ -90,6 +90,7 @@ model User {
     changelogs         Changelog[]
     sharedChangelogs   ChangelogSharing[]   @relation("ChangelogSharedBy")
     developerComments  DeveloperComment[]
+    apiTokens          ApiToken[]
 
     @@index([email])
     @@index([jiraAccountId])
@@ -263,6 +264,7 @@ model Sprint {
     changelogs      Changelog[]
     comments        CustomerComment[]
     developerComments DeveloperComment[]
+    shareLinks      ShareLink[]
 
     @@index([projectId])
     @@index([deletedRecordId])
@@ -282,6 +284,7 @@ model Task {
     jiraIssueKey    String?
     jiraIssueId     String?
     jiraIssueType   String?
+    originTaskId    Int? // On snapshot copies: the live task this was copied from
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
@@ -289,6 +292,7 @@ model Task {
     deletedRecord DeleteRecord? @relation(fields: [deletedRecordId], references: [id], onDelete: SetNull, onUpdate: Cascade)
     snapshot      Snapshot?     @relation(fields: [snapshotId], references: [id], onDelete: SetNull, onUpdate: Cascade)
     sprintTasks   SprintTask[]
+    links         TaskLink[]
 
     @@index([deletedRecordId])
     @@index([snapshotId])
@@ -481,4 +485,58 @@ model ChangelogSharing {
     @@index([sharedBy])
     @@index([status])
     @@index([method])
+}
+
+// A pull request or issue linked to a task. Webhooks keep `status` and `lastEventAt` current.
+model TaskLink {
+  id          Int      @id @default(autoincrement())
+  taskId      Int
+  provider    String // github | jira
+  kind        String // pull_request | issue
+  externalId  String // "owner/repo#12" or "PAY-12"
+  url         String
+  title       String?
+  status      String   @default("open") // open, draft, in_review, merged, closed, done
+  lastEventAt DateTime @default(now())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([taskId, url])
+  @@index([externalId])
+  @@index([url])
+}
+
+// A public, read-only link to one sprint's chart and its project's deadline calendar.
+model ShareLink {
+  id          Int       @id @default(autoincrement())
+  token       String    @unique
+  sprintId    Int
+  createdById Int?
+  revokedAt   DateTime?
+
+  createdAt DateTime @default(now())
+
+  sprint Sprint @relation(fields: [sprintId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([sprintId])
+}
+
+// Personal access tokens for the MCP endpoint. Only a SHA-256 hash of the token is stored.
+model ApiToken {
+  id         Int       @id @default(autoincrement())
+  userId     Int
+  name       String
+  tokenHash  String    @unique
+  prefix     String
+  lastUsedAt DateTime?
+  revokedAt  DateTime?
+
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([userId])
 }

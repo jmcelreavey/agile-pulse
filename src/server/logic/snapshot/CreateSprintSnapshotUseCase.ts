@@ -138,6 +138,7 @@ export class CreateSprintSnapshotUseCase extends UseCase {
                   id: undefined,
                   createdAt: undefined,
                   updatedAt: undefined,
+                  originTaskId: st.task.originTaskId ?? st.task.id,
                   snapshotId,
                 },
               },
